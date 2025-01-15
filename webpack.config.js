@@ -10,8 +10,19 @@ module.exports = {
     },
     mode: 'development',
     devtool: 'inline-source-map',
+
     devServer: {
-        static: './dist',
+        port: 8080,
+        host: 'localhost',
+        server: {
+            type: 'https',
+            options: {
+                key: path.resolve(__dirname, '.ssl/localhost.key'),
+                cert: path.resolve(__dirname, '.ssl/localhost.crt'), 
+
+            }
+        },
+        static: path.resolve(__dirname, 'dist'),
         open: true,
         hot: true,
     },

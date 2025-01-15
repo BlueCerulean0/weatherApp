@@ -21,9 +21,26 @@ submit.addEventListener('click', async (event) => {
     let DewPoint;
     let Pressure;
 
+    let position;
+
+    navigator.geolocation.getCurrentPosition((success) => {
+        position = success;
+        console.log(position)
+    }, 
+    
+    (error) => {
+        console.error(error)
+    })
+
+
+
+
+
+
+
     async function getWeather() {
         
-        const response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${city}?key=${key}`, {mode: 'cors'});
+        // const response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${city}?key=${key}`, {mode: 'cors'});
 
         const wetherData = await response.json();
         console.log(wetherData)
@@ -36,7 +53,7 @@ submit.addEventListener('click', async (event) => {
         DewPoint = wetherData.currentConditions.dew;
         Pressure = wetherData.currentConditions.pressure;
         
-        await render();
+        render();
     }
 
     function render() {
