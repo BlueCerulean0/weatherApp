@@ -1,5 +1,7 @@
 const path = require('path');
+const fs = require('fs');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { type } = require('os');
 
 module.exports = {
     entry: './src/index.js',
@@ -23,6 +25,13 @@ module.exports = {
             }
         },
         static: path.resolve(__dirname, 'dist'),
+        server: {
+            type: 'https',
+            options: {
+                key: fs.readFileSync('/home/roy/ssl/localhost.key'), 
+                cert: fs.readFileSync('/home/roy/ssl/localhost.crt'),
+            },
+        },
         open: true,
         hot: true,
     },
