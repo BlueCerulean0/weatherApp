@@ -19,8 +19,8 @@ module.exports = {
         server: {
             type: 'https',
             options: {
-                key: path.resolve(__dirname, '.ssl/localhost.key'),
-                cert: path.resolve(__dirname, '.ssl/localhost.crt'), 
+                key: path.resolve(__dirname, '/home/roy/.ssl/localhost.key'),
+                cert: path.resolve(__dirname, '/home/roy/.ssl/localhost.crt'), 
 
             }
         },
@@ -28,12 +28,13 @@ module.exports = {
         server: {
             type: 'https',
             options: {
-                key: fs.readFileSync('/home/roy/ssl/localhost.key'), 
-                cert: fs.readFileSync('/home/roy/ssl/localhost.crt'),
+                key: fs.readFileSync('/home/roy/.ssl/localhost.key'), 
+                cert: fs.readFileSync('/home/roy/.ssl/localhost.crt'),
             },
         },
         open: true,
         hot: true,
+        port: 8080,
     },
 
     module: {

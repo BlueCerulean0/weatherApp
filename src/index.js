@@ -6,45 +6,60 @@ const form = document.querySelector('form');
 const cityInput = document.querySelector('.city');
 const submit = document.querySelector('.submit');
 const result = document.querySelector('.result');
+const changeUnit = document.querySelector('.changeUnit');
 
-console.log("what")
 
-let Timezone;
-let Temperature;
-let FeelsLike;
-let Humidity;
-let WindSpeed;
-let DewPoint;
-let Pressure;
+class weatherInfo {
+  constructor(Data) {
+    this.conditions = Data.currentConditions.conditions;
+    this.timezone = Data.timezone;
+    this.discription = Data.description;
+    this.temperature = Data.currentConditions.temp;
+    this.feelsLike = Data.currentConditions.feelslike;
+    this.humidity = Data.currentConditions.humidity;
+    this.windSpeed = Data.currentConditions.windspeed;
+    this.dewPoint = Data.currentConditions.dew;
+    this.pressure = Data.currentConditions.pressure;
+    this.resolvedAddress = Data.resolvedAddress;
+  }
+};
 
-const obj = {
-    "place_id": 298062177,
-    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
-    "osm_type": "relation",
-    "osm_id": 396509,
-    "lat": "34.8253019",
-    "lon": "-116.0833144",
-    "class": "boundary",
-    "type": "administrative",
-    "place_rank": 12,
-    "importance": 0.6062067831569095,
-    "addresstype": "county",
-    "name": "San Bernardino County",
-    "display_name": "San Bernardino County, California, United States",
-    "address": {
-        "county": "San Bernardino County",
-        "state": "California",
-        "ISO3166-2-lvl4": "US-CA",
-        "country": "United States",
-        "country_code": "us"
-    },
-    "boundingbox": [
-        "33.8709844",
-        "35.8092552",
-        "-117.8025491",
-        "-114.1307816"
-    ]
-}
+let lastWeatherInfo;
+let tempMode = {unit: "f"};
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  const data = JSON.parse(localStorage.getItem('weatherInfo')) || {};
+  lastWeatherInfo = data;
+  console.log(lastWeatherInfo)
+
+  const savedMode = JSON.parse(localStorage.getItem("tempMode")) || { unit: "f" }
+  tempMode = savedMode;
+  render(lastWeatherInfo);
+});
+
+localStorage.setItem("tempMode", JSON.stringify(tempMode));
+
+result.addEventListener('click', (event) => {
+  if (event.target.matches('.changeUnit')) {
+    if (tempMode.unit === "f") {
+      tempMode.unit = "c";
+      render(lastWeatherInfo);
+
+      console.log('changing unit to c');
+      console.log(tempMode.unit)
+
+    } else if (tempMode.unit === "c") {
+      tempMode.unit = "f";
+      render(lastWeatherInfo);
+
+      console.log('changing unit to c');
+      console.log(tempMode.unit);
+    }
+    localStorage.setItem("tempMode", JSON.stringify(tempMode));
+  }
+
+})
 
 function getAutoLocation() {
     let position;
@@ -74,9 +89,10 @@ async function getAutoCityName(latitude, longitude ) {
     console.log(data)
 
     const address = data.display_name;
-    console.log(address)
+    
+   //await getWeather(address)
+    console.log("Api call made!")
 
-    await getWeather(address)
 }
 
 getAutoLocation();
@@ -84,40 +100,64 @@ getAutoLocation();
 
 submit.addEventListener('click', async (event) => {
     event.preventDefault();
-
-    await getWeather(cityInput.value);
+    if (cityInput.value) {
+      
+      await getWeather(cityInput.value);
+      cityInput.value = "";
+    }
 
 });
 
+
 async function getWeather(city) {
-    
-    const response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${city}?key=${key}`, {mode: 'cors'});
+  try {
+      const response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${city}?key=${key}`, {mode: 'cors'});
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+      const weatherData = await response.json();
+      const weatherinfo = new weatherInfo(weatherData);    
+      console.log(weatherData);
+      lastWeatherInfo = weatherinfo;
+      localStorage.setItem('weatherInfo', JSON.stringify(weatherinfo));
+      render(weatherinfo);
 
-    const wetherData = await response.json();
-    console.log(wetherData)
-
-    Timezone = wetherData.timezone;
-    Temperature = wetherData.currentConditions.temp;
-    FeelsLike = wetherData.currentConditions.feelslike;
-    Humidity = wetherData.currentConditions.humidity;
-    WindSpeed = wetherData.currentConditions.windspeed;
-    DewPoint = wetherData.currentConditions.dew;
-    Pressure = wetherData.currentConditions.pressure;
-    
-    render();
+  } catch (error) {
+      console.error(`Failed to get weather data: ${error}`);
+      result.innerHTML = `<p class="error">Couldn't get the data. Cheack your internet</p>`
+  }
+ 
 }
 
-function render() {
-    result.innerHTML = ""
+function render(info, typeOut=tempMode.unit) {
+    const tempUnitR = typeOut.toUpperCase();
+    const temp = typeOut === "c" ? changeTemp(info.temperature, "c").toFixed(1) : info.temperature;
+    const feels = typeOut === "c" ? changeTemp(info.feelsLike, "c").toFixed(1) : info.feelsLike;
+    result.innerHTML = "";
 
     result.innerHTML = `
+    <button class="changeUnit">°${tempUnitR}</button>
 
-    <h1>Timezone: ${Timezone}</h1>
-    <h1>Temperature: ${Temperature}</h1>
-    <h1>Feels like: ${FeelsLike}</h1>
-    <h1>Humidity: ${Humidity}</h1>
-    <h1>Wind Speed: ${WindSpeed}</h1>
-    <h1>Dew Point: ${DewPoint}</h1>
-    <h1>Pressure: ${Pressure}</h1>
+    <p class="conditions">${info.conditions}</p>
+    <h1 class="resolvedAddress">${info.resolvedAddress}</h1>
+    <h1 class="temp">${temp}<span class="tempUnit">°${tempUnitR}</span></h1>
+    <div class="details">
+        <p>Feels like: ${feels}<span>°F</span></p>
+        <p>Wind: ${info.windSpeed} MPH</p>
+        <p>Humidity: ${info.humidity}</p>
+    </div>
+    <p class="description">${info.discription}</p>
 `
+
+}
+
+function changeTemp(tempNum, typeInput) {
+  
+  if (typeInput === "c") {
+    const f =  (tempNum - 32) * 5/9;
+    return f;
+  } else if (typeInput === "f") {
+    const c = 9/5 * tempNum + 32;
+    return c;
+  }
 }
