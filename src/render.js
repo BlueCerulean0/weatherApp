@@ -15,7 +15,7 @@ export default function render(info, typeOut=tempMode.unit) {
     <h1 class="resolvedAddress">${info.resolvedAddress}</h1>
     <h1 class="temp">${temp}<span class="tempUnit">°${tempUnitR}</span></h1>
     <div class="details">
-        <p>Feels like: ${feels}<span>°F</span></p>
+        <p>Feels like: ${feels}<span>${tempUnitR}</span></p>
         <p>Wind: ${info.windSpeed} MPH</p>
         <p>Humidity: ${info.humidity}</p>
     </div>
